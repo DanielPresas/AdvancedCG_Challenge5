@@ -1,12 +1,12 @@
 {
   "folders": [
     {
+      "name": "Root",
       "path": "..",
-      "name": "Root"
     },
     {
-      "path": "../utils",
-      "name": "Utils"
+      "name": "Source",
+      "path": "../raytracer",
     },
   ],
   "launch": {

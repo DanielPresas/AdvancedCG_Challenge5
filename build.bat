@@ -22,6 +22,6 @@ if "%1"=="debug" (
 echo Building %dir% binary...
 if not exist "build\%dir%\" mkdir "build\%dir%\"
 
-odin build main.odin %collections% -out:"build\%dir%\%exe_name%.exe" %debug_flag% -opt:%level% -vet -show-timings
+odin build raytracer %collections% -out:"build\%dir%\%exe_name%.exe" %debug_flag% -opt:%level% -vet -show-timings
 
 popd

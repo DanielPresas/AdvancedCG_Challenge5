@@ -1,4 +1,4 @@
-package utils;
+package main;
 
 Ray :: struct {
     origin    : Point,
