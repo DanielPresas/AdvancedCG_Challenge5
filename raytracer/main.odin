@@ -1,4 +1,4 @@
-package main;
+package raytracer;
 
 import "core:fmt";
 import "core:math/rand";
@@ -12,10 +12,18 @@ main :: proc() {
     max_depth         :: 50;
 
     // @Note: World
-    world := make([dynamic]Hittable, 2, 100);
+    world := make([dynamic]Hittable, 4, 100);
     defer delete(world);
-    append(&world, Sphere{ center = Point{ 0,    0.0, -1 }, radius =   0.5 });
-    append(&world, Sphere{ center = Point{ 0, -100.5, -1 }, radius = 100.0 });
+
+    mat_ground := new_lambertian_material(Color{ 0.8, 0.8, 0.0 }); defer free(mat_ground);
+    mat_center := new_lambertian_material(Color{ 0.7, 0.3, 0.3 }); defer free(mat_center);
+    mat_left   := new_metal_material(Color{ 0.8, 0.8, 0.8 });      defer free(mat_left);
+    mat_right  := new_metal_material(Color{ 0.8, 0.6, 0.2 }, 1.0); defer free(mat_right);
+
+    append(&world, Sphere{ center = Point{  0.0, -100.5, -1.0 }, radius = 100.0, material = mat_ground });
+    append(&world, Sphere{ center = Point{  0.0,    0.0, -1.0 }, radius =   0.5, material = mat_center });
+    append(&world, Sphere{ center = Point{ -1.0,    0.0, -1.0 }, radius =   0.5, material = mat_left   });
+    append(&world, Sphere{ center = Point{  1.0,    0.0, -1.0 }, radius =   0.5, material = mat_right  });
 
     // @Note: Camera
     camera := make_camera(aspect_ratio);

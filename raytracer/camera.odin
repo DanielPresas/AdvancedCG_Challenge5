@@ -1,4 +1,4 @@
-package main;
+package raytracer;
 
 Camera :: struct {
     origin     : Point,

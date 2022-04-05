@@ -1,4 +1,4 @@
-package main;
+package raytracer;
 
 import "core:fmt";
 import "core:math";
@@ -15,11 +15,14 @@ Color :: Vec3
 
 deg_to_rad :: #force_inline proc(deg : f64) -> f64 { return deg * math.RAD_PER_DEG; }
 
-vec3_unit    :: proc(v : Vec3)    -> Vec3 { return v / vec3_length(v); }
-vec3_length  :: proc(v : Vec3)    -> f64  { return math.sqrt(vec3_length2(v)); }
-vec3_length2 :: proc(v : Vec3)    -> f64  { return v.x * v.x + v.y * v.y + v.z * v.z; }
+vec3_unit        :: proc(v : Vec3) -> Vec3 { return v / vec3_length(v); }
+vec3_length      :: proc(v : Vec3) -> f64  { return math.sqrt(vec3_length2(v)); }
+vec3_length2     :: proc(v : Vec3) -> f64  { return v.x * v.x + v.y * v.y + v.z * v.z; }
+vec_is_near_zero :: proc(v : Vec3) -> bool { return v.x < 1e-8 && v.y < 1e-8 && v.z < 1e-8; }
+
 vec3_dot     :: proc(u, v : Vec3) -> f64  { return u.x * v.x + u.y * v.y + u.z * v.z; }
 vec3_cross   :: proc(u, v : Vec3) -> Vec3 { return Vec3{ u.y * v.z - u.z * v.y, u.z * v.x - u.x * v.z, u.x * v.y - u.y * v.x }; }
+vec3_reflect :: proc(v, n : Vec3) -> Vec3 { return v - 2 * vec3_dot(v, n) * n; }
 
 random_vec3 :: proc(min : f64 = 0.0, max : f64 = 1.0) -> Vec3 {
     return Vec3{ rand.float64_range(min, max), rand.float64_range(min, max), rand.float64_range(min, max), };

@@ -1,17 +1,19 @@
-package main;
+package raytracer;
 
 import "core:math"
 
 Hit_Record :: struct {
     hit_point  : Point,
     normal     : Vec3,
+    material   : Material,
     t          : f64,
     front_face : bool,
 }
 
 Sphere :: struct {
-    center : Point,
-    radius : f64,
+    center   : Point,
+    radius   : f64,
+    material : Material,
 }
 
 Hittable :: union {
@@ -51,6 +53,7 @@ set_record_face_normal :: #force_inline proc(using record : ^Hit_Record, ray : R
     normal = outward_normal if front_face else -outward_normal;
 }
 
+@(private)
 sphere_collision :: proc(sphere : Sphere, ray : Ray, t_min, t_max : f64) -> (hit : bool, record : Hit_Record) {
     hit, record = false, {};
 
@@ -73,6 +76,7 @@ sphere_collision :: proc(sphere : Sphere, ray : Ray, t_min, t_max : f64) -> (hit
     record.hit_point = ray_at(ray, root);
     outward_normal := (record.hit_point - sphere.center) / sphere.radius;
     set_record_face_normal(&record, ray, outward_normal);
+    record.material = sphere.material;
 
     hit = true;
     return;

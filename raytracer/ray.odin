@@ -1,4 +1,4 @@
-package main;
+package raytracer;
 
 Ray :: struct {
     origin    : Point,
@@ -15,11 +15,10 @@ ray_to_color_multi :: proc(ray : Ray, world : []Hittable, depth : int) -> Color 
     if depth <= 0 { return Color{ 0, 0, 0 }; }
 
     if hit_any, record := collision(world, ray, 0.001, Infinity); hit_any {
-        target := record.hit_point + random_vec3_in_hemisphere(record.normal);
-        return 0.5 * ray_to_color(
-            Ray{ origin = record.hit_point, direction = target - record.hit_point },
-            world, depth - 1,
-        );
+        if ok, attenuation, scattered_ray := material_scatter(record.material, ray, record); ok {
+            return attenuation * ray_to_color(scattered_ray, world, depth - 1);
+        }
+        return Color{ 0, 0, 0 };
     }
 
     unit_dir := vec3_unit(ray.direction);
