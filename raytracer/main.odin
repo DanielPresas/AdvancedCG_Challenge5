@@ -12,18 +12,24 @@ main :: proc() {
     max_depth         :: 50;
 
     // @Note: World
-    world := make([dynamic]Hittable, 4, 100);
-    defer delete(world);
+    mat_ground := new_lambertian_material(Color{ 0.7, 0.8, 0.2 });
+    mat_center := new_lambertian_material(Color{ 0.3, 0.2, 0.8 });
+    mat_left   := new_dielectric_material(1.7);
+    mat_right  := new_metal_material(Color{ 0.8, 0.6, 0.2 }, 0.8);
+    defer {
+        free(mat_ground);
+        free(mat_center);
+        free(mat_left);
+        free(mat_right);
+    }
 
-    mat_ground := new_lambertian_material(Color{ 0.8, 0.8, 0.0 }); defer free(mat_ground);
-    mat_center := new_lambertian_material(Color{ 0.7, 0.3, 0.3 }); defer free(mat_center);
-    mat_left   := new_metal_material(Color{ 0.8, 0.8, 0.8 });      defer free(mat_left);
-    mat_right  := new_metal_material(Color{ 0.8, 0.6, 0.2 }, 1.0); defer free(mat_right);
+    world := make([dynamic]Hittable, 4, 100); defer delete(world);
 
     append(&world, Sphere{ center = Point{  0.0, -100.5, -1.0 }, radius = 100.0, material = mat_ground });
     append(&world, Sphere{ center = Point{  0.0,    0.0, -1.0 }, radius =   0.5, material = mat_center });
-    append(&world, Sphere{ center = Point{ -1.0,    0.0, -1.0 }, radius =   0.5, material = mat_left   });
-    append(&world, Sphere{ center = Point{  1.0,    0.0, -1.0 }, radius =   0.5, material = mat_right  });
+    append(&world, Sphere{ center = Point{ -1.1,    0.0, -1.0 }, radius =   0.5, material = mat_left   });
+    append(&world, Sphere{ center = Point{ -1.1,    0.0, -1.0 }, radius =  -0.4, material = mat_left   });
+    append(&world, Sphere{ center = Point{  0.9,    0.0, -1.0 }, radius =   0.3, material = mat_right  });
 
     // @Note: Camera
     camera := make_camera(aspect_ratio);

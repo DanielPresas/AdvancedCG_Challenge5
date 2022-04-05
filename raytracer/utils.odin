@@ -24,6 +24,17 @@ vec3_dot     :: proc(u, v : Vec3) -> f64  { return u.x * v.x + u.y * v.y + u.z *
 vec3_cross   :: proc(u, v : Vec3) -> Vec3 { return Vec3{ u.y * v.z - u.z * v.y, u.z * v.x - u.x * v.z, u.x * v.y - u.y * v.x }; }
 vec3_reflect :: proc(v, n : Vec3) -> Vec3 { return v - 2 * vec3_dot(v, n) * n; }
 
+vec3_refract :: proc { vec3_refract_ratio, vec3_refract_indices }
+vec3_refract_indices :: proc(v, n : Vec3, refractive_index_1, refractive_index_2 : f64) -> Vec3 {
+    return vec3_refract_ratio(v, n, refractive_index_1 / refractive_index_2);
+}
+vec3_refract_ratio :: proc(v, n : Vec3, refractive_ratio : f64) -> Vec3 {
+    cos_theta := min(vec3_dot(-v, n), 1.0);
+    r_out_perpendicular := refractive_ratio * (v + cos_theta * n);
+    r_out_parallel := -math.sqrt(abs(1.0 - vec3_length2(r_out_perpendicular))) * n;
+    return r_out_perpendicular + r_out_parallel;
+}
+
 random_vec3 :: proc(min : f64 = 0.0, max : f64 = 1.0) -> Vec3 {
     return Vec3{ rand.float64_range(min, max), rand.float64_range(min, max), rand.float64_range(min, max), };
 }
