@@ -9,12 +9,13 @@ main :: proc() {
     image_width       :: 400;
     image_height      :: cast(int)(image_width / aspect_ratio);
     samples_per_pixel :: 100;
+    max_depth         :: 50;
 
     // @Note: World
     world := make([dynamic]Hittable, 2, 100);
     defer delete(world);
-    append(&world, Sphere{ center = Point{ 0,      0, -1 }, radius =   0.5 });
-    append(&world, Sphere{ center = Point{ 0, -100.5, -1 }, radius = 100   });
+    append(&world, Sphere{ center = Point{ 0,    0.0, -1 }, radius =   0.5 });
+    append(&world, Sphere{ center = Point{ 0, -100.5, -1 }, radius = 100.0 });
 
     // @Note: Camera
     camera := make_camera(aspect_ratio);
@@ -30,7 +31,7 @@ main :: proc() {
                 v := (f64(y) + rand.float64()) / f64(image_height - 1);
 
                 ray := camera_get_ray(camera, u, v);
-                color += ray_to_color(ray, ..world[:]);
+                color += ray_to_color(ray, world[:], max_depth);
             }
 
             write_color(color, samples_per_pixel);

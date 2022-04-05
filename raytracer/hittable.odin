@@ -19,7 +19,6 @@ Hittable :: union {
 }
 
 collision :: proc { collision_single, collision_multi }
-
 collision_multi :: proc(hittable_list : []Hittable, ray : Ray, t_min, t_max : f64) -> (hit_any : bool, record : Hit_Record) {
     hit_any, record = false, {};
     closest_t := t_max;
@@ -34,7 +33,6 @@ collision_multi :: proc(hittable_list : []Hittable, ray : Ray, t_min, t_max : f6
 
     return;
 }
-
 collision_single :: proc(hittable : Hittable, ray : Ray, t_min, t_max : f64) -> (hit : bool, record : Hit_Record) {
     hit, record = false, {};
     switch h in hittable {

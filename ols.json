@@ -5,8 +5,8 @@
       "path": "C:\\dev\\odin\\core"
     },
     {
-      "name": "utils",
-      "path": "utils"
+      "name": "raytracer",
+      "path": "raytracer"
     }
   ],
   "enable_document_symbols": true,
