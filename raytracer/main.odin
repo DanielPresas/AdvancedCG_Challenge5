@@ -1,16 +1,10 @@
 package raytracer;
 
 import "core:fmt";
+import "core:math";
 import "core:math/rand";
 
 main :: proc() {
-    // @Note: Image
-    aspect_ratio      :: 16.0 / 9.0;
-    image_width       :: 400;
-    image_height      :: cast(int)(image_width / aspect_ratio);
-    samples_per_pixel :: 100;
-    max_depth         :: 50;
-
     // @Note: World
     mat_ground := new_lambertian_material(Color{ 0.7, 0.8, 0.2 });
     mat_center := new_lambertian_material(Color{ 0.3, 0.2, 0.8 });
@@ -32,7 +26,22 @@ main :: proc() {
     append(&world, Sphere{ center = Point{  0.9,    0.0, -1.0 }, radius =   0.3, material = mat_right  });
 
     // @Note: Camera
-    camera := make_camera(aspect_ratio);
+    position       :: Point{ 3, 3,  2 };
+    look_at        :: Point{ 0, 0, -1 };
+    view_up        :: Vec3{ 0, 1, 0 };
+    vertical_fov   :: 30;
+    aspect_ratio   :: 16.0 / 9.0;
+
+    camera := make_camera(
+        position, look_at, view_up,
+        vertical_fov, aspect_ratio,
+    );
+
+    // @Note: Image
+    image_width       :: 400;
+    image_height      :: cast(int)(image_width / aspect_ratio);
+    samples_per_pixel :: 100;
+    max_depth         :: 75;
 
     fmt.printf("P3\n{} {}\n255\n", image_width, image_height);
     for y := image_height - 1; y >= 0; y -= 1 {
@@ -52,4 +61,13 @@ main :: proc() {
         }
     }
     fmt.eprintf("\nDone.\n");
+}
+
+write_color :: proc(c : Color, samples_per_pixel : int) {
+    using math;
+
+    scale := 1.0 / f64(samples_per_pixel);
+    r, g, b := sqrt(c.r * scale), sqrt(c.g * scale), sqrt(c.b * scale);
+    ir, ig, ib := cast(int)(256 * clamp(r, 0.0, 0.999)), cast(int)(256 * clamp(g, 0.0, 0.999)), cast(int)(256 * clamp(b, 0.0, 0.999));
+    fmt.printf("{} {} {}\n", ir, ig, ib);
 }
