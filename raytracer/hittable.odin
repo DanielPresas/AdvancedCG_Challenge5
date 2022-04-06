@@ -5,23 +5,33 @@ import "core:math"
 Hit_Record :: struct {
     hit_point  : Point,
     normal     : Vec3,
-    material   : Material,
+    material   : ^Material,
     t          : f64,
     front_face : bool,
 }
 
-Sphere :: struct {
-    center   : Point,
-    radius   : f64,
-    material : Material,
+Hittable :: struct {
+    type : union { ^Sphere },
+    material : ^Material,
 }
 
-Hittable :: union {
-    Sphere,
+Sphere :: struct {
+    using _base : Hittable,
+    center      : Point,
+    radius      : f64,
+}
+
+new_sphere :: proc(center : Point, radius : f64, mat : ^Material) -> (sphere : ^Sphere) {
+    sphere = new(Sphere);
+    sphere.type = sphere;
+    sphere.material = mat;
+    sphere.center = center;
+    sphere.radius = radius;
+    return;
 }
 
 collision :: proc { collision_single, collision_multi }
-collision_multi :: proc(hittable_list : []Hittable, ray : Ray, t_min, t_max : f64) -> (hit_any : bool, record : Hit_Record) {
+collision_multi :: proc(hittable_list : []^Hittable, ray : Ray, t_min, t_max : f64) -> (hit_any : bool, record : Hit_Record) {
     hit_any, record = false, {};
     closest_t := t_max;
 
@@ -35,10 +45,10 @@ collision_multi :: proc(hittable_list : []Hittable, ray : Ray, t_min, t_max : f6
 
     return;
 }
-collision_single :: proc(hittable : Hittable, ray : Ray, t_min, t_max : f64) -> (hit : bool, record : Hit_Record) {
+collision_single :: proc(hittable : ^Hittable, ray : Ray, t_min, t_max : f64) -> (hit : bool, record : Hit_Record) {
     hit, record = false, {};
-    switch h in hittable {
-        case Sphere: {
+    switch h in hittable.type {
+        case ^Sphere: {
             hit, record = sphere_collision(h, ray, t_min, t_max);
             return;
         }
@@ -54,7 +64,7 @@ set_record_face_normal :: #force_inline proc(using record : ^Hit_Record, ray : R
 }
 
 @(private)
-sphere_collision :: proc(sphere : Sphere, ray : Ray, t_min, t_max : f64) -> (hit : bool, record : Hit_Record) {
+sphere_collision :: proc(sphere : ^Sphere, ray : Ray, t_min, t_max : f64) -> (hit : bool, record : Hit_Record) {
     hit, record = false, {};
 
     oc := ray.origin - sphere.center;

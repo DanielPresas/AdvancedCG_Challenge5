@@ -3,33 +3,40 @@ package raytracer;
 import "core:math";
 import "core:math/rand";
 
-Material :: union {
-    ^Lambertian_Material,
-    ^Metal_Material,
-    ^Dielectric_Material,
+Material :: struct {
+    type : union {
+        ^Lambertian_Material,
+        ^Metal_Material,
+        ^Dielectric_Material,
+    },
 }
 
 Lambertian_Material :: struct {
-    albedo : Color,
+    using _base : Material,
+    albedo      : Color,
 }
 
 Metal_Material :: struct {
-    albedo    : Color,
-    roughness : f64,
+    using _base : Material,
+    albedo      : Color,
+    roughness   : f64,
 }
 
 Dielectric_Material :: struct {
+    using _base      : Material,
     refractive_index : f64,
 }
 
 new_lambertian_material :: proc(albedo : Color) -> (mat : ^Lambertian_Material) {
     mat = new(Lambertian_Material);
+    mat.type = mat;
     mat.albedo = albedo;
     return;
 }
 
 new_metal_material :: proc(albedo : Color, roughness : f64 = 0.0) -> (mat : ^Metal_Material) {
     mat = new(Metal_Material);
+    mat.type = mat;
     mat.albedo = albedo;
     mat.roughness = clamp(roughness, 0.0, 1.0);
     return;
@@ -37,13 +44,14 @@ new_metal_material :: proc(albedo : Color, roughness : f64 = 0.0) -> (mat : ^Met
 
 new_dielectric_material :: proc(refractive_index : f64) -> (mat : ^Dielectric_Material) {
     mat = new(Dielectric_Material);
+    mat.type = mat;
     mat.refractive_index = refractive_index;
     return;
 }
 
-material_scatter :: proc(mat : Material, ray_in : Ray, hit_record : Hit_Record) -> (ok : bool, attenuation : Color, scattered : Ray) {
+material_scatter :: proc(mat : ^Material, ray_in : Ray, hit_record : Hit_Record) -> (ok : bool, attenuation : Color, scattered : Ray) {
     ok, attenuation, scattered = false, {}, {};
-    switch m in mat {
+    switch m in mat.type {
         case ^Lambertian_Material: {
             ok, attenuation, scattered = lambertian_material_scatter(m, ray_in, hit_record);
             return;

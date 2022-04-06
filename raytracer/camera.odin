@@ -16,17 +16,16 @@ make_camera :: proc(
     cam : Camera,
 ) {
     theta := deg_to_rad(vertical_fov);
-    h := math.tan(theta / 2.0);
-    viewport_height := 2.0 * h;
-    viewport_width  := viewport_height * aspect_ratio;
+    half_height := math.tan(theta / 2.0);
+    half_width  := half_height * aspect_ratio;
 
     cam.forward = vec3_unit(look_from - look_at);
     cam.right   = vec3_unit(vec3_cross(view_up, cam.forward));
     cam.up      = vec3_cross(cam.forward, cam.right);
 
     cam.position    = look_from;
-    cam.horizontal  = cam.right * viewport_width * focus_distance;
-    cam.vertical    = cam.up * viewport_height * focus_distance;
+    cam.horizontal  = cam.right * 2.0 * half_width * focus_distance;
+    cam.vertical    = cam.up * 2.0 * half_height * focus_distance;
     cam.lower_left  = cam.position - (cam.horizontal / 2.0) - (cam.vertical / 2.0) - (cam.forward * focus_distance);
     cam.lens_radius = aperture / 2.0;
 

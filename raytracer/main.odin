@@ -6,35 +6,24 @@ import "core:math/rand";
 
 main :: proc() {
     // @Note: World
-    mat_ground := new_lambertian_material(Color{ 0.7, 0.8, 0.2 });
-    mat_center := new_lambertian_material(Color{ 0.3, 0.2, 0.8 });
-    mat_left   := new_dielectric_material(1.7);
-    mat_right  := new_metal_material(Color{ 0.8, 0.6, 0.2 }, 0.8);
+    world := make([dynamic]^Hittable, 0, 500);
+    random_world(&world);
     defer {
-        free(mat_ground);
-        free(mat_center);
-        free(mat_left);
-        free(mat_right);
+        for h in world {
+            free(h.material);
+            free(h);
+        }
+        delete(world);
     }
 
-    world := make([dynamic]Hittable, 4, 100); defer delete(world);
-
-    append(&world, Sphere{ center = Point{  0.0, -100.5, -1.0 }, radius = 100.0, material = mat_ground });
-    append(&world, Sphere{ center = Point{  0.0,    0.0, -1.0 }, radius =   0.5, material = mat_center });
-    append(&world, Sphere{ center = Point{ -1.1,    0.0, -1.0 }, radius =   0.5, material = mat_left   });
-    append(&world, Sphere{ center = Point{ -1.1,    0.0, -1.0 }, radius =  -0.4, material = mat_left   });
-    append(&world, Sphere{ center = Point{  0.9,    0.0, -1.0 }, radius =   0.3, material = mat_right  });
-
     // @Note: Camera
-    position       :: Point{ 3, 3,  2 };
-    look_at        :: Point{ 0, 0, -1 };
-    view_up        :: Vec3{ 0, 1, 0 };
-    vertical_fov   :: 20;
-    aspect_ratio   :: 16.0 / 9.0;
-    aperture       :: 2.0;
-    focus_distance := vec3_length(position - look_at);
-
-    fmt.eprintf("{}", focus_distance);
+    position       :: Point{ 13, 2, 3 };
+    look_at        :: Point{  0, 0, 0 };
+    view_up        :: Vec3 {  0, 1, 0 };
+    vertical_fov   :: 30;
+    aspect_ratio   :: 16.0 / 10.0;
+    aperture       :: 0.1;
+    focus_distance :: 10;
 
     camera := make_camera(
         position, look_at, view_up,
@@ -45,33 +34,71 @@ main :: proc() {
     image_width       :: 400;
     image_height      :: cast(int)(image_width / aspect_ratio);
     samples_per_pixel :: 100;
-    max_depth         :: 75;
+    max_depth         :: 50;
+
+    // output := make([]Color, image_width * image_height);
 
     fmt.printf("P3\n{} {}\n255\n", image_width, image_height);
     for y := image_height - 1; y >= 0; y -= 1 {
-        fmt.eprintf("\rScanlines remaining: {: 4d}", y);
+        fmt.eprintf("\rScanlines remaining: {: 4d} ({}%% done)", y, int(100.0 * f64(image_height - 1 - y) / f64(image_height - 1)));
         for x in 0 ..< image_width {
             color := Color{ 0, 0, 0 };
-
             for _ in 0 ..< samples_per_pixel {
                 u := (f64(x) + rand.float64()) / f64(image_width  - 1);
                 v := (f64(y) + rand.float64()) / f64(image_height - 1);
-
                 ray := camera_get_ray(camera, u, v);
                 color += ray_to_color(ray, world[:], max_depth);
             }
 
-            write_color(color, samples_per_pixel);
+            scale := 1.0 / f64(samples_per_pixel);
+            sr, sg, sb := math.sqrt(color.r * scale), math.sqrt(color.g * scale), math.sqrt(color.b * scale);
+            ir, ig, ib := int(256 * clamp(sr, 0.0, 0.999)), int(256 * clamp(sg, 0.0, 0.999)), int(256 * clamp(sb, 0.0, 0.999));
+            // output[y * image_width + x] = Color{ f64(ir), f64(ig), f64(ib) };
+            fmt.printf("{} {} {}\n", ir, ig, ib);
         }
     }
     fmt.eprintf("\nDone.\n");
 }
 
-write_color :: proc(c : Color, samples_per_pixel : int) {
-    using math;
+random_world :: proc(world : ^[dynamic]^Hittable) {
+    ground_material := new_lambertian_material(Color{ 0.5, 0.5, 0.5 });
+    append(world, new_sphere(Point{ 0, -1000 , 0 }, 1000, ground_material));
 
-    scale := 1.0 / f64(samples_per_pixel);
-    r, g, b := sqrt(c.r * scale), sqrt(c.g * scale), sqrt(c.b * scale);
-    ir, ig, ib := cast(int)(256 * clamp(r, 0.0, 0.999)), cast(int)(256 * clamp(g, 0.0, 0.999)), cast(int)(256 * clamp(b, 0.0, 0.999));
-    fmt.printf("{} {} {}\n", ir, ig, ib);
+    for a in -11 ..< 11 {
+        for b in -11 ..< 11 {
+            choose_mat := rand.float64();
+            center := Point{ f64(a) + 0.9 * rand.float64(), 0.2, f64(b) + 0.9 * rand.float64() };
+
+            if vec3_length(center - Point{ 4.0, 0.2, 0.0 }) > 0.9 {
+                sphere_material : ^Material;
+                switch {
+                    case choose_mat < 0.8: {
+                        // diffuse
+                        albedo := random_vec3() * random_vec3();
+                        sphere_material = new_lambertian_material(albedo);
+                    }
+                    case choose_mat < 0.95: {
+                        // metal
+                        albedo := random_vec3(0.5, 1.0);
+                        fuzz   := rand.float64_range(0.0, 0.5);
+                        sphere_material = new_metal_material(albedo, fuzz);
+                    }
+                    case: {
+                        // glass
+                        refrac := rand.float64_range(1.3, 1.7);
+                        sphere_material = new_dielectric_material(refrac);
+                    }
+                }
+                append(world, new_sphere(center, 0.2, sphere_material));
+            }
+        }
+    }
+
+    mat1 := new_dielectric_material(1.5);
+    mat2 := new_lambertian_material(Color{ 0.4, 0.2, 0.1 });
+    mat3 := new_metal_material(Color{ 0.7, 0.6, 0.5 }, 0.0);
+
+    append(world, new_sphere(Point{  0, 1, 0 }, 1.0, mat1));
+    append(world, new_sphere(Point{ -4, 1, 0 }, 1.0, mat2));
+    append(world, new_sphere(Point{  4, 1, 0 }, 1.0, mat3));
 }
