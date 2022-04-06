@@ -29,12 +29,16 @@ main :: proc() {
     position       :: Point{ 3, 3,  2 };
     look_at        :: Point{ 0, 0, -1 };
     view_up        :: Vec3{ 0, 1, 0 };
-    vertical_fov   :: 30;
+    vertical_fov   :: 20;
     aspect_ratio   :: 16.0 / 9.0;
+    aperture       :: 2.0;
+    focus_distance := vec3_length(position - look_at);
+
+    fmt.eprintf("{}", focus_distance);
 
     camera := make_camera(
         position, look_at, view_up,
-        vertical_fov, aspect_ratio,
+        vertical_fov, aspect_ratio, aperture, focus_distance,
     );
 
     // @Note: Image
